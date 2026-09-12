@@ -48,6 +48,7 @@
   .wrap{max-width:1120px; margin:0 auto; padding:24px 22px 80px}
   .console-edms{--accent:#2563eb; --accent-weak:#eef3ff}
   .console-admin{--accent:#0f766e; --accent-weak:#e6f4f1}
+  .console-mail{--accent:#0066ff; --accent-weak:#eef3ff}
   .screen{animation:fade .22s ease}
   @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
   @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
@@ -75,6 +76,32 @@
   .linkbtn{border:1px solid var(--border-strong); background:var(--surface); border-radius:7px; padding:7px 12px; font-size:12.5px; font-weight:600; color:var(--text); display:inline-flex; align-items:center; gap:7px}
   .linkbtn:hover{background:var(--surface-2); border-color:var(--text-3)}
   .linkbtn svg{width:14px; height:14px}
+  .list th.no, .list td.no{width:56px; text-align:center; color:var(--text-3); font-variant-numeric:tabular-nums}
+  .list th.chk, .list td.chk{width:44px; text-align:center; padding-left:14px; padding-right:0}
+  .list th.chk input, .list td.chk input{width:16px; height:16px; cursor:pointer; accent-color:var(--accent); vertical-align:middle}
+  .bulkbar{display:flex; align-items:center; gap:12px; padding:10px 14px; margin-bottom:20px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px}
+  .bulkbar .selcount{font-size:13px; color:var(--text-2)}
+  .bulkbar .selcount b{color:var(--accent)}
+  .bulk-actions{display:flex; gap:8px}
+  .mailtabs{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 16px}
+  .mailtab{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--border);background:var(--surface);border-radius:9px;font-size:13px;font-weight:600;color:var(--text-2)}
+  .mailtab:hover{background:var(--surface-2)}
+  .mailtab.on{border-color:var(--accent);color:var(--text);box-shadow:inset 0 0 0 1px var(--accent)}
+  .mailtab .mt-to{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px}
+  .mailtab .mt-to.mgr{background:#e8f0fe;color:#1a56db}
+  .mailtab .mt-to.op{background:#e6f4f1;color:#0f766e}
+  .mailbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+  .langtabs{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .langtab{padding:7px 18px;font-size:13px;font-weight:600;color:var(--text-3);background:var(--surface)}
+  .langtab:hover{background:var(--surface-2)}
+  .langtab.on{background:var(--accent);color:#fff}
+  .mailspec{font-size:12.5px;color:var(--text-3)}
+  .mailspec b{color:var(--text-2);font-weight:600}
+  .mailhead{border:1px solid var(--border);border-bottom:0;border-radius:12px 12px 0 0;padding:15px 20px;background:var(--surface)}
+  .mailhead .mh-subj{font-size:15.5px;font-weight:700;color:var(--text);line-height:1.4}
+  .mailhead .mh-meta{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:12px;color:var(--text-3)}
+  .mailhead .mh-meta b{color:var(--text-2);font-weight:600}
+  .mailframe{border:1px solid var(--border);border-radius:0 0 12px 12px;overflow:hidden}
 
   .btn{border:1px solid var(--border-strong); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); padding:9px 15px; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px; letter-spacing:-.2px; transition:background .12s, border-color .12s}
   .btn:hover{background:var(--surface-2); border-color:var(--text-3)}
@@ -145,6 +172,10 @@
   .drop p{color:var(--text-2); font-size:13px}
   .drop .hint{color:var(--text-3); font-size:11.5px; margin-top:3px}
   .sim{display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap}
+  .devsim{margin-top:14px; border:1px dashed #d9b64e; background:#fffdf4; border-radius:10px; padding:12px 14px; text-align:center}
+  .devsim-tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; letter-spacing:.2px; color:#8a6d1a; background:#fdf0c9; border:1px solid #ecd58a; border-radius:999px; padding:3px 11px; margin-bottom:11px}
+  .devsim-btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+  .devsim-note{margin:11px 0 0; font-size:11.5px; color:#9a7b2a; line-height:1.55}
 
   .note{border:1px solid var(--border); border-radius:9px; padding:12px 14px; font-size:12.5px; color:var(--text-2); background:var(--surface-2)}
   .note.blue{background:var(--accent-weak); border-color:transparent; color:var(--accent)}
@@ -270,15 +301,17 @@ store[0].rows = Array.from({length:63}, (_,i)=>({
   start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'
 }));
 (function seedMore(){
+  const COMPANIES=[['showcase','쇼케이스'],['hanmi','한미교육'],['nexon','넥슨'],['kbfg','KB금융'],['gsret','GS리테일']];
+  store.forEach((s,i)=>{ if(!s.companyCode){ const c=COMPANIES[i%COMPANIES.length]; s.companyCode=c[0]; s.companyName=c[1]; } });
   const courses=[['C10231','신임팀장 리더십'],['C20044','정보보안 기본'],['C30871','DX 리터러시'],['C40120','CS 응대 스킬업'],['C50233','회계 실무 기초'],['C60777','비즈니스 글쓰기'],['C70512','데이터 분석 입문'],['C80190','협상의 기술']];
   const authors=[['김민서','minseo.kim'],['박지훈','jihoon.park'],['이수연','sooyeon.lee'],['정도윤','doyoon.jung'],['최하람','haram.choi']];
   const sts=['처리완료','접수','재확인요청','처리완료','취소','처리실패','처리완료','접수'];
   for(let i=1;i<=58;i++){
-    const c=courses[i%courses.length], a=authors[i%authors.length], st=sts[i%sts.length];
+    const c=courses[i%courses.length], a=authors[i%authors.length], st=sts[i%sts.length], co=COMPANIES[i%COMPANIES.length];
     const mo=String(8-(i%3)).padStart(2,'0'), da=String(28-(i%27)).padStart(2,'0');
     const rows=Array.from({length:1+(i%4)}, (_,k)=>({learner:`emp${i}_${k+1}@company.co.kr`, course:c[0], courseName:c[1], start:'2026-'+mo+'-'+da+' 00:00:00', end:'2026-12-20 23:59:59'}));
     if(st==='처리실패') rows[rows.length-1].fail='이미 입과된 이력이 있습니다. (중복 입과 불가)';
-    store.push({ id:'REQ-2026-'+String(1999-i), title:`${c[1]} 단체신청 (${i}차)`, author:a[0], authorEmail:a[1]+'@company.co.kr',
+    store.push({ id:'REQ-2026-'+String(1999-i), title:`${c[1]} 단체신청 (${i}차)`, companyCode:co[0], companyName:co[1], author:a[0], authorEmail:a[1]+'@company.co.kr',
       createdAt:`2026-${mo}-${da} 1${i%9}:0${i%6}`, status:st, outcome: st==='처리실패'?'partial':'success',
       requestNote: st==='재확인요청'?'대상자 명단 중 재직 여부 확인이 필요한 인원이 있습니다. 확인 후 재접수 부탁드립니다.':'',
       rows });
@@ -301,6 +334,7 @@ function go(tab, screen, id){
   view = {tab, screen:screen||'list', id:id||null};
   ui = {intake:'idle', intakeTitle:'', recheckOpen:false, recheckNote:'', recheckErr:false};
   pageState.detail.page = 1;
+  adminSel.clear();
   if(view.tab==='edms' && view.screen==='create' && view.id){ const s=find(view.id); if(s) ui.intakeTitle=s.title; }
   render();
   window.scrollTo({top:0, behavior:'instant'});
@@ -315,7 +349,7 @@ function render(){
   else who.innerHTML='';
 
   const app=document.getElementById('app');
-  if(view.tab==='mail'){ app.innerHTML = viewMail(); return; }
+  if(view.tab==='mail'){ app.className='console-mail'; app.innerHTML = viewMail(); return; }
   if(view.tab==='edms'){
     app.className='console-edms';
     app.innerHTML = view.screen==='create' ? viewEdmsCreate()
@@ -363,6 +397,7 @@ function pagedSlice(all, scope){ const st=pageState[scope]; const start=(st.page
 function refreshList(scope){
   document.getElementById(scope+'-rows').innerHTML = listBody(scope);
   document.getElementById(scope+'-pager').innerHTML = pagerHtml(scope, visibleRows(scope).length);
+  if(scope==='admin') updateBulk();
 }
 function gotoPage(scope, p){
   pageState[scope].page = p;
@@ -375,26 +410,35 @@ function scrollToRows(){ const el=document.getElementById('detail-rows'); if(el)
 
 function listBody(scope){
   const all=visibleRows(scope);
-  if(!all.length) return `<tr><td colspan="${scope==='edms'?4:5}"><div class="empty"><h3>표시할 항목이 없습니다</h3>조건에 맞는 접수 건이 없습니다.</div></td></tr>`;
+  if(!all.length) return `<tr><td colspan="${scope==='edms'?6:9}"><div class="empty"><h3>표시할 항목이 없습니다</h3>조건에 맞는 접수 건이 없습니다.</div></td></tr>`;
+  const st=pageState[scope];
+  const offset=(st.page-1)*st.size;
+  const total=all.length;
   const rows=pagedSlice(all, scope);
-  if(scope==='edms') return rows.map(s=>`
+  if(scope==='edms') return rows.map((s,idx)=>`
     <tr class="click" onclick="go('edms','detail','${s.id}')">
+      <td class="no">${total-(offset+idx)}</td>
       <td><div class="t-title">${esc(s.title)}</div></td>
       <td>${badge(edmsStatus(s.status))}</td>
       <td>${esc(s.author)}</td>
+      <td class="mono">${esc(s.authorEmail)}</td>
       <td class="t-mono mono">${s.createdAt}</td>
     </tr>`).join('');
-  return rows.map(s=>`
+  return rows.map((s,idx)=>`
     <tr class="click" onclick="go('admin','detail','${s.id}')">
-      <td><div class="t-title">${esc(s.title)}</div><div class="t-id mono">${s.id} · 대상 ${s.rows.length}건</div></td>
+      <td class="chk" onclick="event.stopPropagation()"><input type="checkbox" ${adminSel.has(s.id)?'checked':''} onclick="event.stopPropagation();toggleSel('${s.id}',this)"></td>
+      <td class="no">${total-(offset+idx)}</td>
+      <td><div class="t-title">${esc(s.title)}</div></td>
+      <td class="mono">${esc(s.companyCode)}</td>
+      <td>${esc(s.companyName)}</td>
+      <td>${esc(s.author)}</td>
+      <td class="mono">${esc(s.authorEmail)}</td>
       <td>${badge(s.status)}</td>
-      <td>${esc(s.author)}<div class="t-id">${esc(s.authorEmail)}</div></td>
       <td class="t-mono mono">${s.createdAt}</td>
-      <td class="right"><button class="btn sm ghost" onclick="event.stopPropagation();go('admin','detail','${s.id}')">상세</button></td>
     </tr>`).join('');
 }
-function setFilter(scope,f,el){ filters[scope]=f; pageState[scope].page=1; el.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el)); refreshList(scope); }
-function setSearch(scope,v){ searches[scope]=v.trim(); pageState[scope].page=1; refreshList(scope); }
+function setFilter(scope,f,el){ filters[scope]=f; pageState[scope].page=1; if(scope==='admin') adminSel.clear(); el.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el)); refreshList(scope); }
+function setSearch(scope,v){ searches[scope]=v.trim(); pageState[scope].page=1; if(scope==='admin') adminSel.clear(); refreshList(scope); }
 
 function segHtml(scope, opts){
   return `<div class="seg">${opts.map((o,i)=>`<button class="${i===0?'on':''}" data-f="${o}" onclick="setFilter('${scope}','${o==='전체'?'all':o}',this)">${o}</button>`).join('')}</div>`;
@@ -413,7 +457,7 @@ function viewEdmsList(){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>접수하기</button>
     </div>
     <div class="card"><div class="tbl-scroll"><table class="list">
-      <thead><tr><th>제목</th><th>상태</th><th>작성자</th><th>작성일</th></tr></thead>
+      <thead><tr><th class="no">No.</th><th>제목</th><th>상태</th><th>작성자</th><th>아이디</th><th>작성일</th></tr></thead>
       <tbody id="edms-rows">${listBody('edms')}</tbody>
     </table></div><div class="pager" id="edms-pager">${pagerHtml('edms', visibleRows('edms').length)}</div></div>
   </div>`;
@@ -465,8 +509,14 @@ function viewEdmsCreate(){
             <p class="hint">최대 1MB</p>
             <div class="sim">
               <button class="btn sm" onclick="downloadTemplate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>양식 다운로드</button>
-              <button class="btn sm primary" onclick="simUpload('ok')">정상 파일 업로드</button>
-              <button class="btn sm" onclick="simUpload('bad')">오류 포함 파일 업로드</button>
+            </div>
+            <div class="devsim">
+              <span class="devsim-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:12px;height:12px"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>개발자용 시뮬레이터</span>
+              <div class="devsim-btns">
+                <button class="btn sm primary" onclick="simUpload('ok')">정상 파일 업로드</button>
+                <button class="btn sm" onclick="simUpload('bad')">오류 포함 파일 업로드</button>
+              </div>
+              <p class="devsim-note">실제 파일 업로드·유효성 검토를 대신하는 임시 버튼입니다. 프로토타입 확인용이며, 실제 개발 시에는 파일 업로드 컴포넌트로 대체됩니다.</p>
             </div>
           </div>
         </div>
@@ -486,7 +536,7 @@ function submitIntake(){
   const id='REQ-2026-'+String(++seq).padStart(4,'0');
   const now=new Date();
   const ts=`2026-09-12 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  store.unshift({ id, title, author:'김민서', authorEmail:'minseo.kim@company.co.kr', createdAt:ts,
+  store.unshift({ id, title, companyCode:'showcase', companyName:'쇼케이스', author:'김민서', authorEmail:'minseo.kim@company.co.kr', createdAt:ts,
     status:'접수', outcome:'success', requestNote:'',
     rows:[
       {learner:'newuser1@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'},
@@ -532,7 +582,7 @@ function viewEdmsDetail(id){
       <div class="section">
         <dl class="kv">
           <dt>상태</dt><dd>${badge(disp)}</dd>
-          <dt>작성자</dt><dd>${esc(s.author)}</dd>
+          <dt>작성자</dt><dd>${esc(s.author)} <span class="t-id mono">(${esc(s.authorEmail)})</span></dd>
           <dt>작성일</dt><dd class="mono">${s.createdAt}</dd>
           <dt>대상 건수</dt><dd>${s.rows.length}건</dd>
           <dt>신청서 파일</dt><dd>${fileBtn(s)}</dd>
@@ -550,15 +600,16 @@ function viewAdminList(){
   return `<div class="screen">
     <div class="crumb"><span class="pill admin">Admin</span> 부가서비스 <span>›</span> 단체 수강신청 접수</div>
     <div class="pagehead">
-      <div><h1>단체 수강신청 접수</h1><p class="desc">교육담당자가 접수한 건을 검토합니다. 승인 시 입과 처리가 실행되며, 처리실패 건은 재실행·재확인요청·종결 처리할 수 있습니다.</p></div>
+      <div><h1>단체 수강신청 접수</h1></div>
     </div>
     <div class="toolbar">
       ${segHtml('admin',['전체','접수','처리중','처리실패','처리완료','재확인요청','취소'])}
       <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
         <input type="text" placeholder="제목·작성자 검색" value="${esc(searches.admin)}" oninput="setSearch('admin',this.value)"></div>
     </div>
+    <div class="bulkbar" id="bulkbar">${bulkBarInner()}</div>
     <div class="card"><div class="tbl-scroll"><table class="list">
-      <thead><tr><th>제목</th><th>상태</th><th>작성자(교육담당자)</th><th>접수일</th><th></th></tr></thead>
+      <thead><tr><th class="chk"><input type="checkbox" id="admin-allchk" onclick="toggleSelAll(this)" ${allPageSelected()?'checked':''}></th><th class="no">No.</th><th>제목</th><th>기업코드</th><th>기업명</th><th>작성자</th><th>아이디</th><th>상태</th><th>접수일</th></tr></thead>
       <tbody id="admin-rows">${listBody('admin')}</tbody>
     </table></div><div class="pager" id="admin-pager">${pagerHtml('admin', visibleRows('admin').length)}</div></div>
   </div>`;
@@ -599,6 +650,7 @@ function viewAdminDetail(id){
         <dl class="kv">
           <dt>상태</dt><dd>${badge(s.status)}</dd>
           <dt>작성자</dt><dd>${esc(s.author)} <span class="t-id mono">(${esc(s.authorEmail)})</span></dd>
+          <dt>기업</dt><dd>${esc(s.companyName)} <span class="t-id mono">(${esc(s.companyCode)})</span></dd>
           <dt>접수일</dt><dd class="mono">${s.createdAt}</dd>
           <dt>대상 건수</dt><dd>${s.rows.length}건${s.status==='처리실패'?` · <span style="color:var(--st-fail-tx);font-weight:600">실패 ${s.rows.filter(r=>r.fail).length}건</span>`:''}</dd>
           <dt>신청서 파일</dt><dd>${fileBtn(s)}</dd>
@@ -679,26 +731,168 @@ function confirmCancel(id){
   toast('접수가 취소되었습니다','plain');
 }
 
-/* ============ Mail placeholder ============ */
+/* ============ Admin bulk selection ============ */
+const adminSel = new Set();
+function selectableOnPage(){ return pagedSlice(visibleRows('admin'),'admin').map(s=>s.id); }
+function allPageSelected(){ const ids=selectableOnPage(); return ids.length>0 && ids.every(i=>adminSel.has(i)); }
+function bulkBarInner(){
+  const n=adminSel.size;
+  return `<span class="selcount">선택 <b>${n}</b>건</span>
+    <div class="bulk-actions">
+      <button class="btn sm" ${n?'':'disabled'} onclick="bulkCancel()">일괄 취소</button>
+      <button class="btn sm primary" ${n?'':'disabled'} onclick="bulkApprove()">일괄 승인</button>
+    </div>`;
+}
+function updateBulk(){
+  const bar=document.getElementById('bulkbar'); if(bar) bar.innerHTML=bulkBarInner();
+  const mc=document.getElementById('admin-allchk'); if(mc) mc.checked=allPageSelected();
+}
+function toggleSel(id, el){ if(el.checked) adminSel.add(id); else adminSel.delete(id); updateBulk(); }
+function toggleSelAll(el){ const ids=selectableOnPage(); if(el.checked) ids.forEach(i=>adminSel.add(i)); else ids.forEach(i=>adminSel.delete(i)); refreshList('admin'); }
+function bulkApprove(){
+  const sel=[...adminSel]; const ids=sel.filter(id=>{ const s=find(id); return s && s.status==='접수'; });
+  if(!ids.length){ toast('승인 가능한(접수 상태) 건이 없습니다','bad'); return; }
+  const skipped=sel.length-ids.length;
+  ids.forEach(id=>{ const s=find(id); if(s) s.status='처리중'; });
+  adminSel.clear(); refreshList('admin');
+  toast(`${ids.length}건 승인 · 입과 처리를 시작합니다`,'ok');
+  if(skipped) toast(`${skipped}건은 접수 상태가 아니어서 제외됨`,'plain');
+  setTimeout(()=>{
+    let ok=0, fail=0;
+    ids.forEach(id=>{ const s=find(id); if(!s)return;
+      if(s.outcome==='partial'){ s.status='처리실패'; if(!s.rows.some(r=>r.fail)&&s.rows.length>1) s.rows[s.rows.length-1].fail='이미 입과된 이력이 있습니다. (중복 입과 불가)'; fail++; }
+      else { s.status='처리완료'; s.rows.forEach(r=>delete r.fail); ok++; }
+    });
+    if(ok) toast(`${ok}건 입과 처리 완료`,'ok');
+    if(fail) toast(`${fail}건 처리실패 발생`,'bad');
+    toast('교육담당자에게 처리 결과 안내 메일 발송','mail');
+    if(view.tab==='admin'&&view.screen==='list') refreshList('admin');
+  },1400);
+}
+function bulkCancel(){
+  const sel=[...adminSel]; const ids=sel.filter(id=>{ const s=find(id); return s && CANCELLABLE.includes(s.status); });
+  if(!ids.length){ toast('취소 가능한(접수·재확인요청) 건이 없습니다','bad'); return; }
+  const skipped=sel.length-ids.length;
+  showConfirm(`선택한 ${ids.length}건을 취소하시겠습니까? 취소된 건은 되돌릴 수 없습니다.`, ()=>{
+    ids.forEach(id=>{ const s=find(id); if(s) s.status='취소'; });
+    adminSel.clear();
+    toast(`${ids.length}건이 취소되었습니다`,'plain');
+    if(skipped) toast(`${skipped}건은 취소 불가 상태여서 제외됨`,'plain');
+    if(view.tab==='admin'&&view.screen==='list') refreshList('admin');
+  }, '일괄 취소', '닫기', true);
+}
+
+/* ============ Mail templates ============ */
+let mailState = {sel:0, lang:'ko'};
+const MAIL_SAMPLE = {
+  applicant:{ko:'김민서', en:'Minseo Kim'},
+  title:{ko:'2026 하반기 리더십 과정 단체신청', en:'2026 H2 Leadership Program Group Enrollment'},
+  date:{ko:'2026-09-12 10:35', en:'2026-09-12 10:35'},
+  recheck:{ko:'대상자 명단 중 재직 여부 확인이 필요한 인원이 있습니다. 확인 후 재접수 부탁드립니다.', en:'Some listed learners require employment-status verification. Please re-submit after checking.'},
+  ccode:{ko:'showcase', en:'showcase'},
+  cname:{ko:'쇼케이스', en:'Showcase Inc.'}
+};
+const ROW_LABELS = {
+  applicant:{ko:'신청자', en:'Applicant'},
+  title:{ko:'제목', en:'Title'},
+  date:{ko:'신청일', en:'Application date'},
+  recheck:{ko:'확인 요청 내용', en:'Review request details'},
+  ccode:{ko:'기업코드', en:'Company code'},
+  cname:{ko:'기업명', en:'Company name'}
+};
+const MAILS = [
+  { tab:'접수완료', who:'교육담당자',
+    trigger:{ko:'접수 완료 시 (상태 → 접수)'},
+    target:'교육담당자 관리시스템(new EDMS) > 수강신청 > 단체 수강신청 접수 > 해당 접수 건 상세',
+    subject:{ko:'[휴넷] 단체 수강신청 접수가 완료되었습니다.', en:'[hunet] Your group course enrollment request has been received.'},
+    heading:{ko:'단체 수강신청 접수가 완료되었습니다.', en:'Your group course enrollment request has been received.'},
+    body:{ko:['휴넷 운영 담당자가 확인 후 처리해드릴 예정입니다.'], en:['A hunet operations manager will review and process it shortly.']},
+    rows:['applicant','title','date'],
+    button:{ko:'교육담당자 관리시스템 이동', en:'Go to Training Manager Management System'} },
+  { tab:'재확인요청', who:'교육담당자',
+    trigger:{ko:'재확인요청 시 (상태 → 재확인요청)'},
+    target:'교육담당자 관리시스템(new EDMS) > 수강신청 > 단체 수강신청 접수 > 해당 접수 건 상세',
+    subject:{ko:'[휴넷] 단체 수강신청 접수 내용을 다시 확인해주세요.', en:'[hunet] Please review your group course enrollment request again.'},
+    heading:{ko:'단체 수강신청 접수 내용을 다시 확인해주세요.', en:'Please review your group course enrollment request again.'},
+    body:{ko:[], en:[]},
+    rows:['applicant','title','date','recheck'],
+    button:{ko:'교육담당자 관리시스템 이동', en:'Go to Training Manager Management System'} },
+  { tab:'처리완료', who:'교육담당자',
+    trigger:{ko:'처리 완료 시 (상태 → 처리완료)'},
+    target:'교육담당자 관리시스템(new EDMS) > 수강신청 > 단체 수강신청 접수 > 해당 접수 건 상세',
+    subject:{ko:'[휴넷] 단체 수강신청 접수가 처리완료되었습니다.', en:'[hunet] Your group course enrollment request has been processed.'},
+    heading:{ko:'단체 수강신청 접수가 처리완료되었습니다.', en:'Your group course enrollment request has been processed.'},
+    body:{ko:[], en:[]},
+    rows:['applicant','title','date'],
+    button:{ko:'교육담당자 관리시스템 이동', en:'Go to Training Manager Management System'} },
+  { tab:'접수 알림', who:'운영자',
+    trigger:{ko:'접수 완료 시 (상태 → 접수)'},
+    target:'휴넷 ADMIN > 부가서비스 > 단체 수강신청 접수 > 해당 접수 건 상세',
+    subject:{ko:'[$기업명$] 단체 수강신청 접수 알림', en:'[$Company Name$] Group course enrollment request notification'},
+    heading:{ko:'단체 수강신청 요청이 접수되었습니다.', en:'A group course enrollment request has been submitted.'},
+    body:{ko:[], en:[]},
+    rows:['ccode','cname','applicant','title','date'],
+    button:{ko:'휴넷 ADMIN 이동', en:'Go to hunet ADMIN'} },
+  { tab:'처리실패 알림', who:'운영자',
+    trigger:{ko:'처리 실패 시 (상태 → 처리실패)'},
+    target:'휴넷 ADMIN > 부가서비스 > 단체 수강신청 접수 > 해당 접수 건 상세',
+    subject:{ko:'[$기업명$] 단체 수강신청 처리실패 알림', en:'[$Company Name$] Group course enrollment processing failure notification'},
+    heading:{ko:'단체 수강신청 건 처리에 실패하였습니다.', en:'Processing of the group course enrollment request has failed.'},
+    body:{ko:[], en:[]},
+    rows:['ccode','cname','applicant','title','date'],
+    button:{ko:'휴넷 ADMIN 이동', en:'Go to hunet ADMIN'} }
+];
+function mailSubject(m, lang){
+  return (m.subject[lang]||'').replace('$기업명$', MAIL_SAMPLE.cname.ko).replace('$Company Name$', MAIL_SAMPLE.cname.en);
+}
+function mailEmailHtml(m, lang){
+  const rows = m.rows;
+  const rowsHtml = rows.map((k,i)=>{
+    const bb = (i===rows.length-1) ? '' : 'border-bottom:1px solid #eaebec;';
+    return `<tr>
+        <td bgcolor="#f7f7f8" width="130" style="padding:16px 20px;${bb}font-size:14px;line-height:1.6;letter-spacing:-0.5px;color:rgba(23,23,25,0.6);vertical-align:top">${ROW_LABELS[k][lang]}</td>
+        <td style="padding:16px 20px;${bb}font-size:16px;line-height:1.6;letter-spacing:-0.5px;color:#171719;vertical-align:top">${esc(MAIL_SAMPLE[k][lang])}</td></tr>`;
+  }).join('');
+  const paras = (m.body[lang]||[]).map(p=>`<div style="padding-bottom:32px;font-size:14px;line-height:1.6;letter-spacing:-0.5px;color:rgba(23,23,25,0.8)">${esc(p)}</div>`).join('');
+  const foot = lang==='ko'
+    ? '본 메일은 발송전용 메일로 회신되지 않습니다.<br>본 메일은 정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행규칙에 의거하여 발송되었습니다.'
+    : 'This email is send-only and cannot be replied to.<br>Sent in accordance with the Act on Promotion of Information and Communications Network Utilization and Information Protection.';
+  return `<div style="background:#ffffff;font-family:'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif">
+    <div style="max-width:700px;margin:0 auto;padding:0 32px;box-sizing:border-box">
+      <div style="padding:32px 20px 64px;text-align:center">
+        <img src="https://hunetdown.cdn.hunet.co.kr/Resources/HunetDev/HRD_DEV/Images/mail/2026/01/27_LABS3.0/hunet-logo-black.png" alt="hunet" height="30" style="display:inline-block" />
+      </div>
+      <div style="padding-bottom:32px;font-size:28px;font-weight:bold;line-height:1.4;letter-spacing:-0.7px;color:rgba(23,23,25,0.8)">${esc(m.heading[lang])}</div>
+      ${paras}
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border:1px solid #e1e2e4;border-radius:8px;overflow:hidden;border-collapse:separate;border-spacing:0">${rowsHtml}</table>
+      <div style="padding:32px 0;text-align:center">
+        <a href="#" style="display:inline-block;background:#0066ff;border-radius:12px;padding:16px 24px;color:#ffffff;font-size:16px;font-weight:500;line-height:1.6;letter-spacing:-0.5px;text-decoration:none">${esc(m.button[lang])}</a>
+      </div>
+      <div style="padding:32px 0;font-size:12px;line-height:1.6;letter-spacing:-0.5px;color:rgba(23,23,25,0.45)">${foot}</div>
+    </div>
+  </div>`;
+}
+function selMail(i){ mailState.sel=i; render(); }
+function selMailLang(l){ mailState.lang=l; render(); }
 function viewMail(){
+  const m = MAILS[mailState.sel];
+  const lang = mailState.lang;
+  const to = m.who==='운영자' ? '휴넷 운영자 <labs@hunet.co.kr>' : '김민서 <minseo.kim@company.co.kr>';
   return `<div class="screen">
-    <div class="crumb">메일</div>
-    <div class="pagehead"><div><h1>메일</h1><p class="desc">상태 전이 시점별 발송 메일을 관리하는 영역입니다.</p></div></div>
-    <div class="mailwrap"><div class="mail-empty">
-      <span class="tag">준비 중</span>
-      <h2>메일 상세는 프로토타입 작업 중 정의합니다</h2>
-      <p>아래는 정책서 11항 기준 발송 시점 요약입니다. 각 메일의 제목·본문·수신자 표기 등 상세 화면은 이후 단계에서 채워 넣습니다.</p>
-      <div class="card" style="margin-top:20px"><div class="tbl-scroll"><table class="list">
-        <thead><tr><th>발송 시점</th><th>수신자</th><th>메일 종류</th></tr></thead>
-        <tbody>
-          <tr><td>접수 완료 → 접수</td><td>운영자</td><td>접수 알림</td></tr>
-          <tr><td>접수 완료 → 접수</td><td>교육담당자</td><td>접수 안내</td></tr>
-          <tr><td>재확인요청 · 처리실패 → 재확인요청</td><td>교육담당자</td><td>재확인요청 안내</td></tr>
-          <tr><td>처리 완료 → 처리완료</td><td>교육담당자</td><td>처리완료 안내</td></tr>
-          <tr><td>처리 실패 → 처리실패</td><td>운영자</td><td>처리실패 알림</td></tr>
-        </tbody>
-      </table></div></div>
-    </div></div>
+    <div class="crumb"><span class="pill" style="background:#eef3ff;color:#0066ff">메일</span> 발송 메일 템플릿</div>
+    <div class="pagehead"><div><h1>메일 템플릿</h1><p class="desc">상태 전이 시점별 발송 메일을 국문·영문으로 확인합니다. 정책서 11항 · 메일링 정의(엑셀) 기준.</p></div></div>
+    <div class="mailtabs">
+      ${MAILS.map((mm,i)=>`<button class="mailtab ${i===mailState.sel?'on':''}" onclick="selMail(${i})"><span class="mt-to ${mm.who==='운영자'?'op':'mgr'}">${mm.who}</span>${mm.tab}</button>`).join('')}
+    </div>
+    <div class="mailbar">
+      <div class="langtabs"><button class="langtab ${lang==='ko'?'on':''}" onclick="selMailLang('ko')">국문</button><button class="langtab ${lang==='en'?'on':''}" onclick="selMailLang('en')">영문</button></div>
+      <div class="mailspec">발송 시점 · <b>${m.trigger.ko}</b> &nbsp;|&nbsp; 버튼 이동 · ${esc(m.target)}</div>
+    </div>
+    <div class="mailhead">
+      <div class="mh-subj">${esc(mailSubject(m,lang))}</div>
+      <div class="mh-meta"><span>보낸사람 <b>labs@hunet.co.kr</b></span><span>받는사람 <b>${esc(to)}</b></span></div>
+    </div>
+    <div class="mailframe">${mailEmailHtml(m, lang)}</div>
   </div>`;
 }
 
