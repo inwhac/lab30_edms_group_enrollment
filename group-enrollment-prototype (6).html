@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단체 수강신청 접수 · 프로토타입</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --bg:#f4f6f8; --surface:#ffffff; --surface-2:#fafbfc;
+    --border:#e3e6ea; --border-strong:#d3d8de;
+    --text:#171a1f; --text-2:#5a616b; --text-3:#868d97;
+    --accent:#2563eb; --accent-weak:#eef3ff;
+    --radius:10px; --radius-sm:7px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+    --st-recv-bg:#eef3ff; --st-recv-tx:#1d4ed8;
+    --st-proc-bg:#fff5e4; --st-proc-tx:#b45309;
+    --st-done-bg:#e6f6ec; --st-done-tx:#137a4b;
+    --st-fail-bg:#fdecec; --st-fail-tx:#c0362c;
+    --st-recheck-bg:#feeee4; --st-recheck-tx:#c2410c;
+    --st-cancel-bg:#eef0f2; --st-cancel-tx:#6b7280;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--text); font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit; cursor:pointer}
+  h1,h2,h3,h4,p{margin:0}
+
+  .appbar{height:56px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:28px; padding:0 22px; position:sticky; top:0; z-index:20}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:15px; letter-spacing:-.2px}
+  .brand .logo{width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,#2563eb,#0f766e); display:grid; place-items:center; color:#fff; font-size:13px; font-weight:800}
+  .brand .sub{font-weight:500; color:var(--text-3); font-size:12px; padding:2px 7px; border:1px solid var(--border); border-radius:20px}
+  .tabs{display:flex; gap:4px; height:100%}
+  .tab{border:0; background:transparent; height:100%; padding:0 15px; font-size:14px; font-weight:600; color:var(--text-2); display:flex; align-items:center; gap:8px; border-bottom:2px solid transparent; letter-spacing:-.2px}
+  .tab .dot{width:8px; height:8px; border-radius:50%}
+  .tab[data-t="edms"] .dot{background:#2563eb}
+  .tab[data-t="admin"] .dot{background:#0f766e}
+  .tab[data-t="mail"] .dot{background:#98a2b3}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--text); border-bottom-color:var(--text)}
+  .who{margin-left:auto; display:flex; align-items:center; gap:9px; color:var(--text-2); font-size:13px}
+  .who .av{width:28px; height:28px; border-radius:50%; background:var(--accent-weak); color:var(--accent); display:grid; place-items:center; font-weight:700; font-size:12px}
+
+  .wrap{max-width:1120px; margin:0 auto; padding:24px 22px 80px}
+  .console-edms{--accent:#2563eb; --accent-weak:#eef3ff}
+  .console-admin{--accent:#0f766e; --accent-weak:#e6f4f1}
+  .screen{animation:fade .22s ease}
+  @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+
+  .backlink{display:inline-flex; align-items:center; gap:6px; color:var(--text-2); font-size:13px; font-weight:600; background:none; border:0; padding:5px 0; margin-bottom:2px}
+  .backlink:hover{color:var(--text)}
+  .backlink svg{width:15px; height:15px}
+  .crumb{color:var(--text-3); font-size:12.5px; margin-bottom:8px; display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+  .crumb .pill{font-weight:700; color:#fff; padding:1px 8px; border-radius:5px; font-size:11px}
+  .crumb .pill.edms{background:#2563eb}
+  .crumb .pill.admin{background:#0f766e}
+  .pagehead{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px}
+  .pagehead h1{font-size:21px; letter-spacing:-.5px; display:flex; align-items:center; gap:11px}
+  .pagehead .desc{color:var(--text-2); font-size:13px; margin-top:6px; max-width:64ch}
+  .pagehead .actions{display:flex; gap:8px; flex-wrap:wrap; flex:none}
+  .page-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:20px; flex-wrap:wrap}
+  .pager{display:flex; align-items:center; gap:12px; padding:12px 16px; border-top:1px solid var(--border); flex-wrap:wrap}
+  .pager.plain{border-top:0; padding:14px 0 0}
+  .pgsize select{border:1px solid var(--border-strong); border-radius:7px; padding:6px 10px; font-size:12.5px; font-family:inherit; background:var(--surface); color:var(--text); cursor:pointer}
+  .pgnums{display:flex; align-items:center; gap:4px; margin-left:auto}
+  .pgbtn{min-width:30px; height:30px; padding:0 8px; border:1px solid var(--border); background:var(--surface); border-radius:7px; font-size:12.5px; font-weight:600; color:var(--text-2)}
+  .pgbtn:hover:not(:disabled){background:var(--surface-2); color:var(--text)}
+  .pgbtn.on{background:var(--accent); border-color:var(--accent); color:#fff}
+  .pgbtn:disabled{opacity:.4; cursor:not-allowed}
+  .linkbtn{border:1px solid var(--border-strong); background:var(--surface); border-radius:7px; padding:7px 12px; font-size:12.5px; font-weight:600; color:var(--text); display:inline-flex; align-items:center; gap:7px}
+  .linkbtn:hover{background:var(--surface-2); border-color:var(--text-3)}
+  .linkbtn svg{width:14px; height:14px}
+
+  .btn{border:1px solid var(--border-strong); background:var(--surface); color:var(--text); border-radius:var(--radius-sm); padding:9px 15px; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px; letter-spacing:-.2px; transition:background .12s, border-color .12s}
+  .btn:hover{background:var(--surface-2); border-color:var(--text-3)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.primary:hover{filter:brightness(.94)}
+  .btn.ghost{border-color:transparent; background:transparent; color:var(--text-2); padding:7px 10px}
+  .btn.ghost:hover{background:var(--surface-2); color:var(--text)}
+  .btn.danger{color:var(--st-fail-tx); border-color:#f2c9c5}
+  .btn.danger:hover{background:#fdecec; border-color:#e79a93}
+  .btn.sm{padding:6px 11px; font-size:12.5px}
+  .btn:disabled{opacity:.5; cursor:not-allowed}
+  .btn svg{width:15px; height:15px}
+
+  .toolbar{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+  .seg{display:inline-flex; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:3px; gap:2px; flex-wrap:wrap}
+  .seg button{border:0; background:transparent; padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; color:var(--text-2)}
+  .seg button.on{background:var(--accent-weak); color:var(--accent)}
+  .search{margin-left:auto; position:relative}
+  .search input{border:1px solid var(--border); border-radius:8px; padding:8px 12px 8px 32px; font-size:13px; width:220px; background:var(--surface)}
+  .search input:focus{outline:2px solid var(--accent-weak); border-color:var(--accent)}
+  .search svg{position:absolute; left:10px; top:9px; width:15px; height:15px; color:var(--text-3)}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table.list{width:100%; border-collapse:collapse; min-width:720px}
+  .list thead th{text-align:left; font-size:12px; font-weight:600; color:var(--text-3); padding:12px 16px; background:var(--surface-2); border-bottom:1px solid var(--border); white-space:nowrap}
+  .list tbody td{padding:13px 16px; border-bottom:1px solid var(--border); vertical-align:middle; font-size:13.5px}
+  .list tbody tr:last-child td{border-bottom:0}
+  .list tbody tr.click{transition:background .1s}
+  .list tbody tr.click:hover{background:var(--surface-2); cursor:pointer}
+  .t-title{font-weight:600; letter-spacing:-.2px}
+  .t-id{color:var(--text-3); font-size:11.5px; margin-top:2px}
+  .t-mono{color:var(--text-2); font-size:12.5px}
+  td.right{text-align:right}
+
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap}
+  .badge::before{content:""; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.85}
+  .badge.lg{font-size:13px; padding:5px 13px}
+  .b-접수{background:var(--st-recv-bg); color:var(--st-recv-tx)}
+  .b-처리중{background:var(--st-proc-bg); color:var(--st-proc-tx)}
+  .b-처리완료{background:var(--st-done-bg); color:var(--st-done-tx)}
+  .b-처리실패{background:var(--st-fail-bg); color:var(--st-fail-tx)}
+  .b-재확인요청{background:var(--st-recheck-bg); color:var(--st-recheck-tx)}
+  .b-취소{background:var(--st-cancel-bg); color:var(--st-cancel-tx)}
+
+  .empty{padding:56px 20px; text-align:center; color:var(--text-3)}
+  .empty h3{font-size:15px; color:var(--text-2); margin-bottom:6px; font-weight:600}
+
+  .section{padding:20px 22px; border-bottom:1px solid var(--border)}
+  .section:last-child{border-bottom:0}
+  .section-t{font-size:12px; font-weight:700; color:var(--text-3); margin-bottom:12px; display:flex; align-items:center; gap:8px}
+  .section-t .cnt{background:var(--surface-2); border:1px solid var(--border); color:var(--text-2); border-radius:20px; padding:1px 8px; font-size:11px}
+
+  .kv{display:grid; grid-template-columns:130px 1fr; gap:11px 16px; font-size:13.5px}
+  .kv dt{color:var(--text-3); font-weight:500}
+  .kv dd{margin:0; color:var(--text)}
+
+  .field{margin-bottom:18px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--text-2); margin-bottom:6px}
+  .field label .req{color:var(--st-fail-tx); margin-left:3px}
+  .field input[type=text]{width:100%; border:1px solid var(--border-strong); border-radius:8px; padding:10px 12px; font-size:13.5px}
+  .field input:focus, textarea:focus{outline:2px solid var(--accent-weak); border-color:var(--accent)}
+  textarea{width:100%; border:1px solid var(--border-strong); border-radius:8px; padding:10px 12px; font-size:13.5px; font-family:inherit; resize:vertical; min-height:88px}
+
+  .drop{border:1.5px dashed var(--border-strong); border-radius:10px; padding:22px; text-align:center; background:var(--surface-2)}
+  .drop .fx{width:38px; height:38px; border-radius:9px; background:var(--accent-weak); color:var(--accent); display:grid; place-items:center; margin:0 auto 10px}
+  .drop p{color:var(--text-2); font-size:13px}
+  .drop .hint{color:var(--text-3); font-size:11.5px; margin-top:3px}
+  .sim{display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap}
+
+  .note{border:1px solid var(--border); border-radius:9px; padding:12px 14px; font-size:12.5px; color:var(--text-2); background:var(--surface-2)}
+  .note.blue{background:var(--accent-weak); border-color:transparent; color:var(--accent)}
+
+  .result{border-radius:10px; padding:14px 16px; margin-top:16px; font-size:13px; display:flex; gap:11px; align-items:flex-start}
+  .result.ok{background:var(--st-done-bg); color:var(--st-done-tx)}
+  .result.bad{background:var(--st-fail-bg); color:var(--st-fail-tx)}
+  .result .ico{flex:none; width:20px; height:20px; margin-top:1px}
+  .result b{font-weight:700}
+
+  .mini{width:100%; border-collapse:collapse; border:1px solid var(--border); border-radius:9px; overflow:hidden}
+  .mini th{font-size:11px; padding:9px 12px; background:var(--surface-2); color:var(--text-3); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap}
+  .mini td{font-size:12.5px; padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text)}
+  .mini tr:last-child td{border-bottom:0}
+  .mini td.fail{color:var(--st-fail-tx)}
+  .mini .rowfail{background:#fef6f5}
+  .mono{font-variant-numeric:tabular-nums; font-feature-settings:"tnum"}
+
+  .proc{display:flex; align-items:center; gap:12px; padding:18px 20px; background:var(--st-proc-bg); border-radius:10px; color:var(--st-proc-tx); font-weight:600; font-size:13.5px}
+  .spin{width:20px; height:20px; border:2.5px solid rgba(180,83,9,.25); border-top-color:var(--st-proc-tx); border-radius:50%; animation:spin .7s linear infinite; flex:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .inline-panel{border:1px solid var(--border); border-radius:10px; padding:16px; margin-top:4px; background:var(--surface-2)}
+  .inline-panel h4{font-size:13.5px; margin-bottom:10px}
+  .inline-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap}
+  .err{color:var(--st-fail-tx); font-size:12.5px; margin-top:6px}
+
+  .confirm{border:1px solid #f2c9c5; background:#fef6f5; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+  .confirm p{color:var(--st-fail-tx); font-size:13px; font-weight:500}
+  .confirm .sp{margin-left:auto; display:flex; gap:8px}
+
+  .mailwrap{max-width:760px}
+  .mail-empty{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:40px 32px; box-shadow:var(--shadow)}
+  .mail-empty .tag{display:inline-block; font-size:11.5px; font-weight:700; color:#98a2b3; border:1px solid var(--border); border-radius:20px; padding:3px 11px; margin-bottom:14px}
+  .mail-empty h2{font-size:19px; letter-spacing:-.4px}
+  .mail-empty p{color:var(--text-2); font-size:13.5px; margin-top:8px; max-width:56ch}
+
+  .guide{color:var(--text-2); font-size:13px; margin-top:9px; display:flex; flex-direction:column; gap:5px; max-width:72ch}
+  .guide span{display:flex; gap:7px}
+  .cf-overlay{position:fixed; inset:0; background:rgba(23,26,31,.42); display:none; align-items:center; justify-content:center; padding:20px; z-index:90}
+  .cf-overlay.on{display:flex}
+  .cf-box{background:var(--surface); border-radius:14px; box-shadow:0 20px 60px rgba(16,24,40,.28); max-width:410px; width:100%; padding:24px; animation:pop .18s ease}
+  @keyframes pop{from{opacity:0; transform:scale(.98)} to{opacity:1; transform:none}}
+  .cf-box p{font-size:14px; color:var(--text); line-height:1.65}
+  .cf-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:20px}
+
+  .toasts{position:fixed; right:22px; bottom:22px; display:flex; flex-direction:column; gap:9px; z-index:80}
+  .toast{background:#171a1f; color:#fff; padding:11px 15px; border-radius:9px; font-size:13px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,.22); display:flex; align-items:center; gap:9px; animation:slidein .22s ease; max-width:340px}
+  .toast .ic{width:16px; height:16px; flex:none}
+  .toast.mail{background:#1e3a5f}
+  @keyframes slidein{from{opacity:0; transform:translateX(10px)} to{opacity:1; transform:none}}
+
+  @media(max-width:640px){
+    .appbar{gap:12px; padding:0 12px; overflow-x:auto}
+    .brand .sub{display:none}
+    .wrap{padding:18px 12px 60px}
+    .pagehead{flex-direction:column}
+    .kv{grid-template-columns:1fr}
+    .kv dt{color:var(--text-3); margin-bottom:-6px}
+  }
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="brand"><span class="logo">단</span> 단체 수강신청 접수 <span class="sub">Prototype</span></div>
+  <nav class="tabs">
+    <button class="tab active" data-t="edms" onclick="go('edms','list')"><span class="dot"></span>new EDMS · 교육담당자</button>
+    <button class="tab" data-t="admin" onclick="go('admin','list')"><span class="dot"></span>Admin · 운영자</button>
+    <button class="tab" data-t="mail" onclick="go('mail','list')"><span class="dot"></span>메일</button>
+  </nav>
+  <div class="who" id="who"></div>
+</div>
+
+<div class="wrap"><div id="app"></div></div>
+<div class="cf-overlay" id="cfOverlay" onclick="if(event.target===this)hideConfirm()">
+  <div class="cf-box"><p id="cfMsg"></p><div class="cf-actions">
+    <button class="btn" id="cfYes"></button><button class="btn primary" id="cfNo"></button>
+  </div></div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============ State ============ */
+let seq = 13;
+const store = [
+  { id:'REQ-2026-0012', title:'2026 하반기 신임팀장 리더십 과정 단체신청', author:'김민서', authorEmail:'minseo.kim@company.co.kr',
+    createdAt:'2026-09-11 14:22', status:'접수', outcome:'success', requestNote:'',
+    rows:[
+      {learner:'hong.gd@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'},
+      {learner:'lee.sh@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'},
+      {learner:'park.jw@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'}
+    ]},
+  { id:'REQ-2026-0011', title:'정보보안 필수교육 3분기', author:'박지훈', authorEmail:'jihoon.park@company.co.kr',
+    createdAt:'2026-09-10 09:15', status:'재확인요청', outcome:'success',
+    requestNote:'5행 학습종료일이 연수원 계약종료일을 초과합니다. 기간 수정 후 재제출 부탁드립니다.',
+    rows:[
+      {learner:'kim.ys@company.co.kr', course:'C20044', courseName:'정보보안 기본', start:'2026-09-12 00:00:00', end:'2026-10-11 23:59:59'},
+      {learner:'choi.mj@company.co.kr', course:'C20044', courseName:'정보보안 기본', start:'2026-09-12 00:00:00', end:'2026-10-11 23:59:59'}
+    ]},
+  { id:'REQ-2026-0010', title:'DX 역량강화 온라인과정', author:'이수연', authorEmail:'sooyeon.lee@company.co.kr',
+    createdAt:'2026-09-09 16:40', status:'처리실패', outcome:'partial', requestNote:'',
+    rows:[
+      {learner:'jang.hb@company.co.kr', course:'C30871', courseName:'DX 리터러시', start:'2026-09-10 00:00:00', end:'2026-12-09 23:59:59'},
+      {learner:'yoon.dh@company.co.kr', course:'C30871', courseName:'DX 리터러시', start:'2026-09-10 00:00:00', end:'2026-12-09 23:59:59', fail:'이미 입과된 이력이 있습니다. (중복 입과 불가)'},
+      {learner:'seo.ja@company.co.kr', course:'C30871', courseName:'DX 리터러시', start:'2026-09-10 00:00:00', end:'2026-12-09 23:59:59', fail:'일시적 시스템/통신 오류로 처리되지 못했습니다.'}
+    ]},
+  { id:'REQ-2026-0009', title:'CS 응대 스킬업 과정', author:'김민서', authorEmail:'minseo.kim@company.co.kr',
+    createdAt:'2026-09-08 11:03', status:'처리완료', outcome:'success', requestNote:'',
+    rows:[
+      {learner:'han.jm@company.co.kr', course:'C40120', courseName:'CS 응대 스킬업', start:'2026-09-08 00:00:00', end:'2026-11-07 23:59:59'},
+      {learner:'oh.sk@company.co.kr', course:'C40120', courseName:'CS 응대 스킬업', start:'2026-09-08 00:00:00', end:'2026-11-07 23:59:59'}
+    ]},
+  { id:'REQ-2026-0008', title:'회계 실무 기초', author:'정도윤', authorEmail:'doyoon.jung@company.co.kr',
+    createdAt:'2026-09-05 10:30', status:'취소', outcome:'success', requestNote:'',
+    rows:[
+      {learner:'shin.hy@company.co.kr', course:'C50233', courseName:'회계 실무 기초', start:'2026-09-06 00:00:00', end:'2026-12-05 23:59:59'}
+    ]}
+];
+
+store[0].rows = Array.from({length:63}, (_,i)=>({
+  learner:`user${String(i+1).padStart(2,'0')}@company.co.kr`, course:'C10231', courseName:'신임팀장 리더십',
+  start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'
+}));
+(function seedMore(){
+  const courses=[['C10231','신임팀장 리더십'],['C20044','정보보안 기본'],['C30871','DX 리터러시'],['C40120','CS 응대 스킬업'],['C50233','회계 실무 기초'],['C60777','비즈니스 글쓰기'],['C70512','데이터 분석 입문'],['C80190','협상의 기술']];
+  const authors=[['김민서','minseo.kim'],['박지훈','jihoon.park'],['이수연','sooyeon.lee'],['정도윤','doyoon.jung'],['최하람','haram.choi']];
+  const sts=['처리완료','접수','재확인요청','처리완료','취소','처리실패','처리완료','접수'];
+  for(let i=1;i<=58;i++){
+    const c=courses[i%courses.length], a=authors[i%authors.length], st=sts[i%sts.length];
+    const mo=String(8-(i%3)).padStart(2,'0'), da=String(28-(i%27)).padStart(2,'0');
+    const rows=Array.from({length:1+(i%4)}, (_,k)=>({learner:`emp${i}_${k+1}@company.co.kr`, course:c[0], courseName:c[1], start:'2026-'+mo+'-'+da+' 00:00:00', end:'2026-12-20 23:59:59'}));
+    if(st==='처리실패') rows[rows.length-1].fail='이미 입과된 이력이 있습니다. (중복 입과 불가)';
+    store.push({ id:'REQ-2026-'+String(1999-i), title:`${c[1]} 단체신청 (${i}차)`, author:a[0], authorEmail:a[1]+'@company.co.kr',
+      createdAt:`2026-${mo}-${da} 1${i%9}:0${i%6}`, status:st, outcome: st==='처리실패'?'partial':'success',
+      requestNote: st==='재확인요청'?'대상자 명단 중 재직 여부 확인이 필요한 인원이 있습니다. 확인 후 재접수 부탁드립니다.':'',
+      rows });
+  }
+})();
+
+let view = {tab:'edms', screen:'list', id:null};
+let ui = {};
+const filters = {edms:'all', admin:'all'};
+const searches = {edms:'', admin:''};
+
+const CANCELLABLE = ['접수','재확인요청'];
+const edmsStatus = s => s==='처리실패' ? '처리중' : s;
+const find = id => store.find(s=>s.id===id);
+const esc = s => (s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const badge = (s,lg) => `<span class="badge ${lg?'lg':''} b-${s}">${s}</span>`;
+
+/* ============ Router ============ */
+function go(tab, screen, id){
+  view = {tab, screen:screen||'list', id:id||null};
+  ui = {intake:'idle', intakeTitle:'', recheckOpen:false, recheckNote:'', recheckErr:false};
+  pageState.detail.page = 1;
+  if(view.tab==='edms' && view.screen==='create' && view.id){ const s=find(view.id); if(s) ui.intakeTitle=s.title; }
+  render();
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function rerender(){ render(); }
+
+function render(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.t===view.tab));
+  const who=document.getElementById('who');
+  if(view.tab==='edms') who.innerHTML='<span class="av">김</span> 김민서 · 교육담당자';
+  else if(view.tab==='admin') who.innerHTML='<span class="av" style="background:#e6f4f1;color:#0f766e">운</span> LMS 운영자';
+  else who.innerHTML='';
+
+  const app=document.getElementById('app');
+  if(view.tab==='mail'){ app.innerHTML = viewMail(); return; }
+  if(view.tab==='edms'){
+    app.className='console-edms';
+    app.innerHTML = view.screen==='create' ? viewEdmsCreate()
+                  : view.screen==='detail' ? viewEdmsDetail(view.id)
+                  : viewEdmsList();
+  } else {
+    app.className='console-admin';
+    app.innerHTML = view.screen==='detail' ? viewAdminDetail(view.id) : viewAdminList();
+  }
+}
+
+/* ============ List helpers ============ */
+function visibleRows(scope){
+  const f=filters[scope], q=searches[scope];
+  return store.filter(s=>{
+    const shown = scope==='edms' ? edmsStatus(s.status) : s.status;
+    if(f!=='all' && shown!==f) return false;
+    if(q){
+      const hay = scope==='edms' ? s.title : (s.title+' '+s.author);
+      if(!hay.toLowerCase().includes(q.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+/* ============ Paging (common policy) ============ */
+const PAGE_SIZES = [30,50,100,200];
+const pageState = { edms:{page:1,size:50}, admin:{page:1,size:50}, detail:{page:1,size:50} };
+function pagerHtml(scope, total){
+  const st=pageState[scope];
+  const pages=Math.max(1, Math.ceil(total/st.size));
+  if(st.page>pages) st.page=pages;
+  let startP=Math.max(1, st.page-2), endP=Math.min(pages, startP+4);
+  startP=Math.max(1, endP-4);
+  let nums='';
+  for(let p=startP;p<=endP;p++) nums+=`<button class="pgbtn ${p===st.page?'on':''}" onclick="gotoPage('${scope}',${p})">${p}</button>`;
+  const opts=PAGE_SIZES.map(n=>`<option value="${n}" ${n===st.size?'selected':''}>${n}개씩 보기</option>`).join('');
+  return `<div class="pgsize"><select onchange="setPageSize('${scope}',this.value)">${opts}</select></div>
+    <div class="pgnums">
+      <button class="pgbtn" ${st.page<=1?'disabled':''} onclick="gotoPage('${scope}',${st.page-1})" aria-label="이전">＜</button>
+      ${nums}
+      <button class="pgbtn" ${st.page>=pages?'disabled':''} onclick="gotoPage('${scope}',${st.page+1})" aria-label="다음">＞</button>
+    </div>`;
+}
+function pagedSlice(all, scope){ const st=pageState[scope]; const start=(st.page-1)*st.size; return all.slice(start, start+st.size); }
+function refreshList(scope){
+  document.getElementById(scope+'-rows').innerHTML = listBody(scope);
+  document.getElementById(scope+'-pager').innerHTML = pagerHtml(scope, visibleRows(scope).length);
+}
+function gotoPage(scope, p){
+  pageState[scope].page = p;
+  if(scope==='detail'){ rerender(); scrollToRows(); return; }
+  refreshList(scope);
+  const c=document.getElementById(scope+'-rows'); if(c){ const card=c.closest('.card'); if(card) card.scrollIntoView({block:'start'}); }
+}
+function setPageSize(scope, v){ pageState[scope].size=parseInt(v,10); pageState[scope].page=1; if(scope==='detail') rerender(); else refreshList(scope); }
+function scrollToRows(){ const el=document.getElementById('detail-rows'); if(el) el.scrollIntoView({block:'start'}); }
+
+function listBody(scope){
+  const all=visibleRows(scope);
+  if(!all.length) return `<tr><td colspan="${scope==='edms'?4:5}"><div class="empty"><h3>표시할 항목이 없습니다</h3>조건에 맞는 접수 건이 없습니다.</div></td></tr>`;
+  const rows=pagedSlice(all, scope);
+  if(scope==='edms') return rows.map(s=>`
+    <tr class="click" onclick="go('edms','detail','${s.id}')">
+      <td><div class="t-title">${esc(s.title)}</div></td>
+      <td>${badge(edmsStatus(s.status))}</td>
+      <td>${esc(s.author)}</td>
+      <td class="t-mono mono">${s.createdAt}</td>
+    </tr>`).join('');
+  return rows.map(s=>`
+    <tr class="click" onclick="go('admin','detail','${s.id}')">
+      <td><div class="t-title">${esc(s.title)}</div><div class="t-id mono">${s.id} · 대상 ${s.rows.length}건</div></td>
+      <td>${badge(s.status)}</td>
+      <td>${esc(s.author)}<div class="t-id">${esc(s.authorEmail)}</div></td>
+      <td class="t-mono mono">${s.createdAt}</td>
+      <td class="right"><button class="btn sm ghost" onclick="event.stopPropagation();go('admin','detail','${s.id}')">상세</button></td>
+    </tr>`).join('');
+}
+function setFilter(scope,f,el){ filters[scope]=f; pageState[scope].page=1; el.parentNode.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===el)); refreshList(scope); }
+function setSearch(scope,v){ searches[scope]=v.trim(); pageState[scope].page=1; refreshList(scope); }
+
+function segHtml(scope, opts){
+  return `<div class="seg">${opts.map((o,i)=>`<button class="${i===0?'on':''}" data-f="${o}" onclick="setFilter('${scope}','${o==='전체'?'all':o}',this)">${o}</button>`).join('')}</div>`;
+}
+
+/* ============ EDMS list ============ */
+function viewEdmsList(){
+  return `<div class="screen">
+    <div class="crumb"><span class="pill edms">new EDMS</span> 수강신청 <span>›</span> 단체 수강신청 접수</div>
+    <div class="pagehead"><div><h1>단체 수강신청 접수</h1></div></div>
+    <div class="toolbar">
+      ${segHtml('edms',['전체','접수','처리중','처리완료','재확인요청','취소'])}
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input type="text" placeholder="제목 검색" value="${esc(searches.edms)}" oninput="setSearch('edms',this.value)"></div>
+      <button class="btn primary" onclick="go('edms','create')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>접수하기</button>
+    </div>
+    <div class="card"><div class="tbl-scroll"><table class="list">
+      <thead><tr><th>제목</th><th>상태</th><th>작성자</th><th>작성일</th></tr></thead>
+      <tbody id="edms-rows">${listBody('edms')}</tbody>
+    </table></div><div class="pager" id="edms-pager">${pagerHtml('edms', visibleRows('edms').length)}</div></div>
+  </div>`;
+}
+
+/* ============ EDMS create (page) ============ */
+function simUpload(kind){ ui.intake=kind; rerender(); }
+function viewEdmsCreate(){
+  const editing = !!view.id;
+  const es = editing ? find(view.id) : null;
+  let result='';
+  if(ui.intake==='ok'){
+    result=`<div class="result ok"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <div><b>유효성 검토 통과 · 대상 12건</b><div style="margin-top:2px">모든 행이 검증을 통과했습니다. 접수하기를 눌러 등록을 완료하세요.</div></div></div>`;
+  } else if(ui.intake==='bad'){
+    result=`<div class="result bad"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+      <div><b>유효성 검토 실패 · 3건</b><div style="margin-top:2px">아래 항목을 수정한 뒤 다시 업로드해 주세요. 실패 행이 1건 이상이면 접수할 수 없습니다.</div></div></div>
+      <div class="section-t" style="margin-top:18px">실패 항목 <span class="cnt">3</span></div>
+      <div class="tbl-scroll"><table class="mini">
+        <thead><tr><th>대상 위치</th><th>학습자 아이디</th><th>과정 아이디</th><th>실패 사유</th></tr></thead>
+        <tbody>
+          <tr class="rowfail"><td class="mono">4행 · 학습자아이디</td><td class="mono">nobody@company.co.kr</td><td class="mono">C10231</td><td class="fail">존재하지 않는 학습자입니다.</td></tr>
+          <tr class="rowfail"><td class="mono">7행 · 과정아이디</td><td class="mono">kim.ys@company.co.kr</td><td class="mono">C99999</td><td class="fail">존재하지 않는 과정입니다.</td></tr>
+          <tr class="rowfail"><td class="mono">9행 · 학습종료일</td><td class="mono">lee.sh@company.co.kr</td><td class="mono">C10231</td><td class="fail">학습종료일은 학습시작일과 연수원계약종료일 사이 기간으로 지정되어야 합니다.</td></tr>
+        </tbody></table></div>`;
+  }
+  const canSubmit = ui.intake==='ok';
+  const titleVal = ui.intakeTitle || (!editing && ui.intake==='ok' ? '2026 하반기 리더십 과정 단체신청' : '');
+  return `<div class="screen">
+    <button class="backlink" onclick="cancelCreate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>목록으로</button>
+    <div class="crumb"><span class="pill edms">new EDMS</span> 수강신청 <span>›</span> 단체 수강신청 접수 <span>›</span> ${editing?'재접수':'접수하기'}</div>
+    <div class="pagehead"><div><h1>${editing?'재접수':'접수하기'}</h1>
+      ${editing
+        ? `<div class="note" style="margin-top:9px;max-width:72ch">재확인요청 사유를 확인하고, 수정한 신청서 파일을 다시 업로드해 접수해 주세요.${es&&es.requestNote?`<div style="margin-top:8px;color:var(--st-recheck-tx)">· ${esc(es.requestNote)}</div>`:''}</div>`
+        : `<div class="guide">
+        <span>① 양식 다운로드 후, 시트2~시트3에서 과정 및 임직원 정보를 확인해주세요.</span>
+        <span>② 대상 과정과 임직원 정보를 시트1 양식에 맞춰 입력해주세요.</span>
+        <span>③ 신청서 파일을 업로드하면 유효성 검토 완료 후, 접수하실 수 있습니다.</span>
+      </div>`}
+    </div></div>
+    <div class="card">
+      <div class="section">
+        <div class="field"><label>제목 <span class="req">*</span></label>
+          <input type="text" id="intakeTitle" placeholder="예) 2026 하반기 리더십 과정 단체신청" value="${esc(titleVal)}" oninput="ui.intakeTitle=this.value"></div>
+        <div class="field"><label>신청서 파일 <span class="req">*</span></label>
+          <div class="drop">
+            <div class="fx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg></div>
+            <p>신청서 파일(.xlsx)을 업로드하세요</p>
+            <p class="hint">최대 1MB</p>
+            <div class="sim">
+              <button class="btn sm" onclick="downloadTemplate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>양식 다운로드</button>
+              <button class="btn sm primary" onclick="simUpload('ok')">정상 파일 업로드</button>
+              <button class="btn sm" onclick="simUpload('bad')">오류 포함 파일 업로드</button>
+            </div>
+          </div>
+        </div>
+        ${result}
+      </div>
+      <div class="section" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+        <div class="note" style="border:0;background:transparent;padding:0;color:var(--text-3);flex:1;min-width:200px">접수 시 휴넷 운영자에게 단체 수강신청 접수 메일이 발송됩니다.</div>
+        <button class="btn" onclick="cancelCreate()">취소</button>
+        <button class="btn primary" ${canSubmit?'':'disabled'} onclick="submitIntake()">${editing?'재접수하기':'접수하기'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+function submitIntake(){
+  if(view.id){ const s=find(view.id); if(s){ s.title=(ui.intakeTitle||'').trim()||s.title; s.status='접수'; s.requestNote=''; } go('edms','list'); toast('재접수되어 접수 상태로 복귀했습니다','ok'); toast('운영자에게 접수 알림 메일 발송','mail'); toast('교육담당자에게 접수 안내 메일 발송','mail'); return; }
+  const title=(ui.intakeTitle||'').trim()||'무제 단체신청';
+  const id='REQ-2026-'+String(++seq).padStart(4,'0');
+  const now=new Date();
+  const ts=`2026-09-12 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  store.unshift({ id, title, author:'김민서', authorEmail:'minseo.kim@company.co.kr', createdAt:ts,
+    status:'접수', outcome:'success', requestNote:'',
+    rows:[
+      {learner:'newuser1@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'},
+      {learner:'newuser2@company.co.kr', course:'C10231', courseName:'신임팀장 리더십', start:'2026-09-15 00:00:00', end:'2026-12-14 23:59:59'}
+    ]});
+  go('edms','list');
+  toast('접수가 완료되었습니다','ok');
+  toast('운영자에게 접수 알림 메일 발송','mail');
+  toast('교육담당자에게 접수 안내 메일 발송','mail');
+}
+
+/* ============ rows table ============ */
+function rowsTable(s, showFail){
+  const all=s.rows;
+  const rows=pagedSlice(all,'detail');
+  const table=`<div class="tbl-scroll" id="detail-rows"><table class="mini">
+    <thead><tr><th>학습자 아이디</th><th>과정 아이디</th><th>과정명</th><th>학습기간</th>${showFail?'<th>결과</th>':''}</tr></thead>
+    <tbody>${rows.map(r=>`<tr class="${showFail&&r.fail?'rowfail':''}">
+      <td class="mono">${esc(r.learner)}</td><td class="mono">${esc(r.course)}</td><td>${esc(r.courseName)}</td>
+      <td class="mono">${r.start.slice(0,10)} ~ ${r.end.slice(0,10)}</td>
+      ${showFail?`<td class="${r.fail?'fail':''}">${r.fail?esc(r.fail):'성공'}</td>`:''}
+    </tr>`).join('')}</tbody></table></div>`;
+  return table + `<div class="pager plain">${pagerHtml('detail', all.length)}</div>`;
+}
+
+/* ============ EDMS detail (page) ============ */
+function viewEdmsDetail(id){
+  const s=find(id); if(!s) return viewEdmsList();
+  const disp=edmsStatus(s.status);
+  const canCancel=CANCELLABLE.includes(s.status);
+  const recheck=s.status==='재확인요청';
+  let actions='';
+  if(canCancel) actions+=`<button class="btn danger" onclick="askCancel('${s.id}')">접수 취소</button>`;
+  if(recheck) actions+=`<button class="btn primary" onclick="go('edms','create','${s.id}')">재접수</button>`;
+  const bottom = actions ? `<div class="page-actions">${actions}</div>` : '';
+  return `<div class="screen">
+    <button class="backlink" onclick="go('edms','list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>목록으로</button>
+    <div class="crumb"><span class="pill edms">new EDMS</span> 단체 수강신청 접수 <span>›</span> 조회</div>
+    <div class="pagehead">
+      <div><h1>${esc(s.title)} ${badge(disp,true)}</h1></div>
+    </div>
+    <div class="card">
+      <div class="section">
+        <dl class="kv">
+          <dt>상태</dt><dd>${badge(disp)}</dd>
+          <dt>작성자</dt><dd>${esc(s.author)}</dd>
+          <dt>작성일</dt><dd class="mono">${s.createdAt}</dd>
+          <dt>대상 건수</dt><dd>${s.rows.length}건</dd>
+          <dt>신청서 파일</dt><dd>${fileBtn(s)}</dd>
+        </dl>
+      </div>
+      ${recheck?`<div class="section"><div class="section-t">확인 요청 내용</div><div class="note">${esc(s.requestNote)}</div></div>`:''}
+      <div class="section"><div class="section-t">신청 대상 <span class="cnt">${s.rows.length}</span></div>${rowsTable(s,false)}</div>
+    </div>
+    ${bottom}
+  </div>`;
+}
+
+/* ============ ADMIN list ============ */
+function viewAdminList(){
+  return `<div class="screen">
+    <div class="crumb"><span class="pill admin">Admin</span> 부가서비스 <span>›</span> 단체 수강신청 접수</div>
+    <div class="pagehead">
+      <div><h1>단체 수강신청 접수</h1><p class="desc">교육담당자가 접수한 건을 검토합니다. 승인 시 입과 처리가 실행되며, 처리실패 건은 재실행·재확인요청·종결 처리할 수 있습니다.</p></div>
+    </div>
+    <div class="toolbar">
+      ${segHtml('admin',['전체','접수','처리중','처리실패','처리완료','재확인요청','취소'])}
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input type="text" placeholder="제목·작성자 검색" value="${esc(searches.admin)}" oninput="setSearch('admin',this.value)"></div>
+    </div>
+    <div class="card"><div class="tbl-scroll"><table class="list">
+      <thead><tr><th>제목</th><th>상태</th><th>작성자(교육담당자)</th><th>접수일</th><th></th></tr></thead>
+      <tbody id="admin-rows">${listBody('admin')}</tbody>
+    </table></div><div class="pager" id="admin-pager">${pagerHtml('admin', visibleRows('admin').length)}</div></div>
+  </div>`;
+}
+
+/* ============ ADMIN detail (page) ============ */
+function viewAdminDetail(id){
+  const s=find(id); if(!s) return viewAdminList();
+  const showFail=(s.status==='처리실패'||s.status==='처리완료');
+  let actions='';
+  if(s.status==='접수'){
+    actions=`<button class="btn danger" onclick="askCancel('${s.id}')">취소</button>
+      <button class="btn" onclick="ui.recheckOpen=true;rerender()">재확인요청</button>
+      <button class="btn primary" onclick="approve('${s.id}')">승인 (입과 실행)</button>`;
+  } else if(s.status==='처리실패'){
+    actions=`<button class="btn" onclick="ui.recheckOpen=true;rerender()">재확인요청</button>
+      <button class="btn" onclick="finalize('${s.id}')">종결 처리</button>
+      <button class="btn primary" onclick="rerun('${s.id}')">재실행 (실패 행만)</button>`;
+  } else if(s.status==='재확인요청'){
+    actions=`<button class="btn danger" onclick="askCancel('${s.id}')">취소</button>`;
+  }
+  let banner='';
+  if(s.status==='처리중') banner=`<div class="section"><div class="proc"><span class="spin"></span> 입과 처리 중입니다…</div></div>`;
+  else if(s.status==='접수') banner=`<div class="section"><div class="note blue">승인하면 입과 처리가 즉시 실행됩니다. 데이터 확인이 필요하면 재확인요청을 보내세요.</div></div>`;
+  else if(s.status==='재확인요청') banner=`<div class="section"><div class="note">교육담당자의 수정·재제출을 기다리는 상태입니다.</div></div>`;
+
+  const bottom = ui.recheckOpen ? recheckPanelHtml(s.id)
+               : (actions ? `<div class="page-actions">${actions}</div>` : '');
+
+  return `<div class="screen">
+    <button class="backlink" onclick="go('admin','list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>목록으로</button>
+    <div class="crumb"><span class="pill admin">Admin</span> 단체 수강신청 접수 <span>›</span> 상세</div>
+    <div class="pagehead">
+      <div><h1>${esc(s.title)} ${badge(s.status,true)}</h1></div>
+    </div>
+    <div class="card">
+      <div class="section">
+        <dl class="kv">
+          <dt>상태</dt><dd>${badge(s.status)}</dd>
+          <dt>작성자</dt><dd>${esc(s.author)} <span class="t-id mono">(${esc(s.authorEmail)})</span></dd>
+          <dt>접수일</dt><dd class="mono">${s.createdAt}</dd>
+          <dt>대상 건수</dt><dd>${s.rows.length}건${s.status==='처리실패'?` · <span style="color:var(--st-fail-tx);font-weight:600">실패 ${s.rows.filter(r=>r.fail).length}건</span>`:''}</dd>
+          <dt>신청서 파일</dt><dd>${fileBtn(s)}</dd>
+        </dl>
+      </div>
+      ${s.status==='재확인요청'&&s.requestNote?`<div class="section"><div class="section-t">요청 내용</div><div class="note">${esc(s.requestNote)}</div></div>`:''}
+      ${banner}
+      <div class="section"><div class="section-t">신청 대상 <span class="cnt">${s.rows.length}</span></div>${rowsTable(s,showFail)}</div>
+    </div>
+    ${bottom}
+  </div>`;
+}
+
+function recheckPanelHtml(id){
+  return `<div class="inline-panel" style="margin-top:20px">
+    <h4>재확인요청</h4>
+    <div class="field" style="margin:0"><label>요청 내용 <span class="req">*</span></label>
+      <textarea id="recheckNote" placeholder="예) 5행 학습종료일이 계약종료일을 초과합니다. 기간 수정 후 재제출 부탁드립니다." oninput="ui.recheckNote=this.value">${esc(ui.recheckNote)}</textarea>
+      ${ui.recheckErr?'<div class="err">요청 내용을 입력해 주세요.</div>':''}
+      <div class="note" style="margin-top:10px">재확인요청 시 교육담당자에게 재확인요청 안내 메일이 발송됩니다.</div>
+    </div>
+    <div class="inline-actions">
+      <button class="btn sm" onclick="ui.recheckOpen=false;ui.recheckErr=false;rerender()">닫기</button>
+      <button class="btn sm primary" onclick="sendRecheck('${id}')">재확인요청 보내기</button>
+    </div>
+  </div>`;
+}
+
+function approve(id){
+  const s=find(id); if(!s)return;
+  s.status='처리중'; rerender();
+  setTimeout(()=>{
+    if(s.outcome==='partial'){
+      s.status='처리실패';
+      if(!s.rows.some(r=>r.fail)&&s.rows.length>1) s.rows[s.rows.length-1].fail='이미 입과된 이력이 있습니다. (중복 입과 불가)';
+      toast('일부 행이 실패하여 처리실패로 전환되었습니다','bad');
+      toast('운영자에게 처리실패 알림 메일 발송','mail');
+    } else {
+      s.status='처리완료'; s.rows.forEach(r=>delete r.fail);
+      toast('입과 처리가 완료되었습니다','ok');
+      toast('교육담당자에게 처리완료 안내 메일 발송','mail');
+    }
+    if(view.tab==='admin'&&view.screen==='detail'&&view.id===id) rerender();
+  },1400);
+}
+function rerun(id){
+  const s=find(id); if(!s)return;
+  s.status='처리중'; rerender();
+  setTimeout(()=>{
+    s.rows.forEach(r=>delete r.fail); s.status='처리완료';
+    toast('실패 행 재실행이 완료되어 처리완료되었습니다','ok');
+    toast('교육담당자에게 처리완료 안내 메일 발송','mail');
+    if(view.tab==='admin'&&view.screen==='detail'&&view.id===id) rerender();
+  },1400);
+}
+function finalize(id){
+  const s=find(id); if(!s)return;
+  s.status='처리완료';
+  toast('운영자 종결로 처리완료되었습니다','ok');
+  toast('교육담당자에게 처리완료 안내 메일 발송','mail');
+  rerender();
+}
+function sendRecheck(id){
+  const s=find(id); if(!s)return;
+  const v=(ui.recheckNote||'').trim();
+  if(!v){ ui.recheckErr=true; rerender(); return; }
+  s.status='재확인요청'; s.requestNote=v;
+  ui.recheckOpen=false; ui.recheckErr=false;
+  toast('재확인요청을 보냈습니다','ok');
+  toast('교육담당자에게 재확인요청 안내 메일 발송','mail');
+  rerender();
+}
+function confirmCancel(id){
+  const s=find(id); if(!s)return;
+  s.status='취소';
+  const back=view.tab;
+  go(back,'list');
+  toast('접수가 취소되었습니다','plain');
+}
+
+/* ============ Mail placeholder ============ */
+function viewMail(){
+  return `<div class="screen">
+    <div class="crumb">메일</div>
+    <div class="pagehead"><div><h1>메일</h1><p class="desc">상태 전이 시점별 발송 메일을 관리하는 영역입니다.</p></div></div>
+    <div class="mailwrap"><div class="mail-empty">
+      <span class="tag">준비 중</span>
+      <h2>메일 상세는 프로토타입 작업 중 정의합니다</h2>
+      <p>아래는 정책서 11항 기준 발송 시점 요약입니다. 각 메일의 제목·본문·수신자 표기 등 상세 화면은 이후 단계에서 채워 넣습니다.</p>
+      <div class="card" style="margin-top:20px"><div class="tbl-scroll"><table class="list">
+        <thead><tr><th>발송 시점</th><th>수신자</th><th>메일 종류</th></tr></thead>
+        <tbody>
+          <tr><td>접수 완료 → 접수</td><td>운영자</td><td>접수 알림</td></tr>
+          <tr><td>접수 완료 → 접수</td><td>교육담당자</td><td>접수 안내</td></tr>
+          <tr><td>재확인요청 · 처리실패 → 재확인요청</td><td>교육담당자</td><td>재확인요청 안내</td></tr>
+          <tr><td>처리 완료 → 처리완료</td><td>교육담당자</td><td>처리완료 안내</td></tr>
+          <tr><td>처리 실패 → 처리실패</td><td>운영자</td><td>처리실패 알림</td></tr>
+        </tbody>
+      </table></div></div>
+    </div></div>
+  </div>`;
+}
+
+/* ============ Template download ============ */
+const TEMPLATE_NAME = '단체_수강신청_접수_양식.xlsx';
+const TEMPLATE_B64 = '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';
+function downloadBytes(b64, name){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  const blob = new Blob([bytes], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function downloadTemplate(){ downloadBytes(TEMPLATE_B64, TEMPLATE_NAME); toast('양식을 다운로드했습니다','plain'); }
+function downloadSubmissionFile(id){ downloadBytes(TEMPLATE_B64, id+'_신청서.xlsx'); toast('신청서 파일을 다운로드했습니다','plain'); }
+function fileBtn(s){ return `<button class="linkbtn" onclick="downloadSubmissionFile('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>${s.id}_신청서.xlsx</button>`; }
+
+/* ============ Toast ============ */
+function toast(msg, kind){
+  const el=document.createElement('div');
+  el.className='toast'+(kind==='mail'?' mail':'');
+  const ic = kind==='mail'
+    ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>'
+    : kind==='bad'
+    ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#ff8a80" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.3"/><circle cx="12" cy="12" r="9"/></svg>'
+    : kind==='ok'
+    ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#7ee2a8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+    : '';
+  el.innerHTML=ic+`<span>${esc(msg)}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s, transform .3s'; el.style.opacity='0'; el.style.transform='translateX(10px)'; setTimeout(()=>el.remove(),300); }, kind==='mail'?2600:2800);
+}
+
+/* ============ Leave-guard confirm ============ */
+function isCreateDirty(){
+  const fileDirty = !!(ui.intake && ui.intake!=='idle');
+  if(view.id){ const s=find(view.id); const titleChanged = s && (ui.intakeTitle||'').trim()!==s.title; return !!(fileDirty || titleChanged); }
+  return !!((ui.intakeTitle && ui.intakeTitle.trim()) || fileDirty);
+}
+function cancelCreate(){
+  if(isCreateDirty()) showConfirm('취소 시 작성한 내용은 모두 사라지고, 복원할 수 없습니다. 이대로 나가시겠습니까?', ()=>go('edms','list'), '나가기','머무르기');
+  else go('edms','list');
+}
+function showConfirm(msg, onYes, yesLabel, noLabel, danger){
+  document.getElementById('cfMsg').textContent = msg;
+  const yes=document.getElementById('cfYes'), no=document.getElementById('cfNo');
+  yes.textContent=yesLabel||'확인'; no.textContent=noLabel||'취소';
+  yes.className = danger ? 'btn danger' : 'btn';
+  no.className = 'btn primary';
+  yes.onclick=()=>{ hideConfirm(); onYes&&onYes(); };
+  no.onclick=hideConfirm;
+  document.getElementById('cfOverlay').classList.add('on');
+}
+function askCancel(id){
+  showConfirm('이 접수 건을 취소하시겠습니까? 취소된 건은 되돌릴 수 없으며, 다시 진행하려면 신규로 접수해야 합니다.', ()=>confirmCancel(id), '접수 취소', '닫기', true);
+}
+function hideConfirm(){ document.getElementById('cfOverlay').classList.remove('on'); }
+
+/* ============ init ============ */
+go('edms','list');
+</script>
+</body>
+</html>
