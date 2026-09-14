@@ -457,7 +457,7 @@ function viewEdmsList(){
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>접수하기</button>
     </div>
     <div class="card"><div class="tbl-scroll"><table class="list">
-      <thead><tr><th class="no">No.</th><th>제목</th><th>상태</th><th>작성자</th><th>아이디</th><th>작성일</th></tr></thead>
+      <thead><tr><th class="no">No.</th><th>제목</th><th>상태</th><th>작성자</th><th>아이디</th><th>접수일</th></tr></thead>
       <tbody id="edms-rows">${listBody('edms')}</tbody>
     </table></div><div class="pager" id="edms-pager">${pagerHtml('edms', visibleRows('edms').length)}</div></div>
   </div>`;
@@ -583,7 +583,7 @@ function viewEdmsDetail(id){
         <dl class="kv">
           <dt>상태</dt><dd>${badge(disp)}</dd>
           <dt>작성자</dt><dd>${esc(s.author)} <span class="t-id mono">(${esc(s.authorEmail)})</span></dd>
-          <dt>작성일</dt><dd class="mono">${s.createdAt}</dd>
+          <dt>접수일</dt><dd class="mono">${s.createdAt}</dd>
           <dt>대상 건수</dt><dd>${s.rows.length}건</dd>
           <dt>신청서 파일</dt><dd>${fileBtn(s)}</dd>
         </dl>
@@ -795,7 +795,7 @@ const MAIL_SAMPLE = {
 const ROW_LABELS = {
   applicant:{ko:'신청자', en:'Applicant'},
   title:{ko:'제목', en:'Title'},
-  date:{ko:'신청일', en:'Application date'},
+  date:{ko:'접수일', en:'Received date'},
   recheck:{ko:'확인 요청 내용', en:'Review request details'},
   ccode:{ko:'기업코드', en:'Company code'},
   cname:{ko:'기업명', en:'Company name'}
@@ -877,7 +877,7 @@ function selMailLang(l){ mailState.lang=l; render(); }
 function viewMail(){
   const m = MAILS[mailState.sel];
   const lang = mailState.lang;
-  const to = m.who==='운영자' ? '휴넷 운영자 <labs@hunet.co.kr>' : '김민서 <minseo.kim@company.co.kr>';
+  const to = m.who==='운영자' ? '휴넷 운영자 <labs30@hunet.co.kr>' : '김민서 <minseo.kim@company.co.kr>';
   return `<div class="screen">
     <div class="crumb"><span class="pill" style="background:#eef3ff;color:#0066ff">메일</span> 발송 메일 템플릿</div>
     <div class="pagehead"><div><h1>메일 템플릿</h1><p class="desc">상태 전이 시점별 발송 메일을 국문·영문으로 확인합니다. 정책서 11항 · 메일링 정의(엑셀) 기준.</p></div></div>
